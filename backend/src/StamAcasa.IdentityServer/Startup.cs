@@ -1,4 +1,5 @@
 using IdentityServer.Data;
+using IdentityServer.Quickstart;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,13 +14,15 @@ namespace IdentityServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            _env = env;
             _identityConfiguration = new StamAcasaIdentityConfiguration(configuration);
         }
 
         public IConfiguration Configuration { get; }
+        public IWebHostEnvironment _env { get; }
         private readonly IStamAcasaIdentityConfiguration _identityConfiguration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -49,8 +52,7 @@ namespace IdentityServer
                 .AddInMemoryClients(_identityConfiguration.Clients)
                 .AddAspNetIdentity<ApplicationUser>();
 
-            // not recommended for production - you need to store your key material somewhere secure
-            builder.AddDeveloperSigningCredential();
+            builder.LoadSigningCredentialFrom(_env, Configuration);
             services.AddAuthentication();
             var emailType = Configuration.GetValue<EmailingSystemTypes>("EMailingSystem");
             switch (emailType)
